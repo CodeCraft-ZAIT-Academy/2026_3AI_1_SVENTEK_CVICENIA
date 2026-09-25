@@ -1,0 +1,23 @@
+<article class="book-card">
+  <h3>{{ book().title }}</h3>
+  <p>Autor: {{ book().author }}</p>
+
+  @if (showDetails) {
+    <div>
+      <p>Rok vydania: {{ book().year }}</p>
+      <p>Žáner: {{ book().genre }}</p>
+    </div>
+  }
+  @if (book().available) {
+    <p>Kniha je dostupná</p>
+  } @else {
+    <p>Kniha je momentálne vypožičaná</p>
+  }
+  <button (click)="toggleDetails()">
+    {{ showDetails ? 'Skryť detail' : 'Zobraziť detail' }}
+  </button>
+
+  <button [disabled]="!book().available">
+    Vypožičať
+  </button>
+</article>
