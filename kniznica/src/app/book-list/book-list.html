@@ -1,5 +1,6 @@
 <section>
   <h2>Zoznam kníh</h2>
+  <p>V knižnici je spolu {{ books.length }} kníh.</p>
 
   @for (book of books; track book.id) {
     <app-book-card [book]="book"></app-book-card>
