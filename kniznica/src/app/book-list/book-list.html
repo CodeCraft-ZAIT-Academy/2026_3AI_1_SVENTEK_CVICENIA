@@ -7,4 +7,21 @@
   } @empty {
     <p>V knižnici zatiaľ nie sú žiadne knihy.</p>
   }
+
+  @for (book of books; track book.id; let i = $index) {
+  @if (isOnCurrentPage(i)) {
+    <app-book-card
+      [book]="book"
+      (borrowed)="borrow(book)"
+      (returned)="giveBack(book)">
+    </app-book-card>
+  }
+}
 </section>
+
+<app-cart
+  [books]="borrowedBooks()"
+  (returned)="giveBack($event)">
+</app-cart>
+
+<h2>Zoznam kníh</h2>
