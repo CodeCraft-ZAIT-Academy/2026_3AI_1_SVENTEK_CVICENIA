@@ -20,6 +20,7 @@ export class BookCard {
   returned = output<void>();
   edited = output<Book>();
   deleted = output<void>();
+  favoriteToggled = output<void>();
 
 
 
@@ -58,7 +59,7 @@ export class BookCard {
   }
 
   toggleFavorite(): void {
-    this.book().favorite = !this.book().favorite;
+    this.favoriteToggled.emit();
   }
 
   borrow(): void {
