@@ -42,36 +42,13 @@ export class BookList {
   availability: string = 'all';
   sortBy: string = 'none';
 
-  visibleBooks(): Book[] {
-    const text = this.searchText.trim().toLowerCase();
-
-    let result = this.books.filter(book =>
-      book.title.toLowerCase().includes(text) ||
-      book.author.toLowerCase().includes(text)
-    );
-
-    if (this.availability === 'available') {
-      result = result.filter(book => book.available);
-    } else if (this.availability === 'borrowed') {
-      result = result.filter(book => !book.available);
-    }
-
-    switch (this.sortBy) {
-      case 'title':
-        result = [...result].sort((a, b) =>
-          a.title.localeCompare(b.title)
-        );
-        break;
-      case 'year':
-        result = [...result].sort((a, b) => b.year - a.year);
-        break;
-      case 'rating':
-        result = [...result].sort((a, b) => b.rating - a.rating);
-        break;
-    }
-
-    return result;
-  }
+ visibleBooks(): Book[] {
+  return this.bookService.getFilteredBooks(
+    this.searchText,
+    this.availability,
+    this.sortBy
+  );
+ }
 
     refreshBooks(): void {
     this.books = this.bookService.getBooks();
@@ -109,12 +86,9 @@ export class BookList {
 
   borrow(book: Book): void {
     if (!this.bookService.borrowBook(book.id)) {
-      alert(
-        `Naraz môžeš mať požičaných najviac ${this.maxBorrowed} kníh. Najskôr nejakú vráť.`
-      );
+      alert('Knihu teraz nie je možné vypožičať. Skontroluj dostupnosť a limit výpožičiek.');
       return;
     }
-
     this.refreshBooks();
   }
 
