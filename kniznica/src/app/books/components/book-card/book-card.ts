@@ -1,4 +1,4 @@
-import { Component, input, output } from '@angular/core';
+import { Component, input, output, signal } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -23,40 +23,38 @@ export class BookCard {
   deleted = output<void>();
   favoriteToggled = output<void>();
 
-
-
-  showDetails: boolean = false;
   favorite: boolean = false;
-  editing: boolean = false;
-  confirmingDelete: boolean = false;
 
-  askDelete(): void {
-    this.confirmingDelete = true;
+  readonly showDetails = signal(false);
+  readonly editing = signal(false);
+  readonly confirmingDelete = signal(false);
+
+  askDelete(): void { 
+    this.confirmingDelete.set(true); 
   }
 
-  cancelDelete(): void {
-    this.confirmingDelete = false;
+  cancelDelete(): void { 
+    this.confirmingDelete.set(false); 
   }
 
   confirmDelete(): void {
     this.deleted.emit();
   }
   
-  startEdit(): void {
-    this.editing = true;
+  startEdit(): void { 
+    this.editing.set(true); 
   }
-
   saveEdit(book: Book): void {
     this.edited.emit(book);
-    this.editing = false;
+    this.editing.set(false);
   }
 
-  cancelEdit(): void {
-    this.editing = false;
+  cancelEdit(): void { 
+    this.editing.set(false); 
   }
 
   toggleDetails(): void {
-    this.showDetails = !this.showDetails;
+    this.showDetails.update(open => !open);
   }
 
   toggleFavorite(): void {
