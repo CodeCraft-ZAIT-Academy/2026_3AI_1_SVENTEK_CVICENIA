@@ -38,19 +38,23 @@ export class BookList {
   readonly books = this.bookService.books;
   readonly borrowedBooks = this.bookService.borrowedBooks;
   readonly maxBorrowed = this.bookService.maxBorrowed;
+  readonly availableBooks = this.bookService.availableBooks;
+  readonly totalBooks = computed(() => this.books().length);
+  readonly favoritesOnly = signal(false);
+  readonly visibleBooks = computed(() => {
+  const list = this.bookService.getFilteredBooks(
+    this.searchText(), this.availability(), this.sortBy()
+  );
+  return this.favoritesOnly() ? list.filter(b => b.favorite) : list;
+  });
+  readonly pagedBooks = computed(() => {
+    const start = (this.currentPage() - 1) * this.pageSize();
+    return this.visibleBooks().slice(start, start + this.pageSize());
+  });
 
     readonly searchText = signal('');
     readonly availability = signal('all');
     readonly sortBy = signal('none');
-
-    readonly visibleBooks = computed(() =>
-      this.bookService.getFilteredBooks(
-        this.searchText(),
-        this.availability(),
-        this.sortBy()
-      )
-    );
- 
 
   refreshBooks(): void {
     this.bookService.getBooks();

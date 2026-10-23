@@ -75,18 +75,16 @@
     }
   </div>
 
-  @for (book of visibleBooks(); track book.id; let i = $index) {
-    @if (isOnCurrentPage(i)) {
+  @for (book of books(); track book.id;) {  // Iterate over the books array and track by book.id
       <app-book-card
         [book]="book"
         (borrowed)="borrow(book)"
         (returned)="giveBack(book)"
         (edited)="updateBook($event)"
-        (deleted)="deleteBook(book)"
-        (favoriteToggled)="toggleFavorite(book)">
+        (deleted)="deleteBook(book)">
       </app-book-card>
     }
-  } @empty {
+    @empty {
     @if (books().length === 0) {
       <p class="empty">V knižnici zatiaľ nie sú žiadne knihy.</p>
     }@else {
@@ -102,6 +100,10 @@
     <button matIconButton (click)="previousPage()" [disabled]="currentPage() === 1">
       <mat-icon>chevron_left</mat-icon>
     </button>
+
+     <button (click)="favoritesOnly.update(v => !v)">
+      {{ favoritesOnly() ? 'Všetky' : 'Iba obľúbené' }} 
+     </button>
 
     @for (page of pages(); track page) {
       <button matButton [disabled]="currentPage() === pageCount()" (click)="goToPage(page)">
