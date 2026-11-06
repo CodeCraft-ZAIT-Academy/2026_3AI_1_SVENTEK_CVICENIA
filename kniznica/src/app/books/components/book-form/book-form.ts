@@ -5,8 +5,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { Book } from '../../book';
-import { createEmptyBook } from '../../book.factory';
 import { GENRES } from '../../genres';
+import { createEmptyBook } from '../../book.factory';
 
 @Component({
   selector: 'app-book-form',
@@ -23,7 +23,8 @@ export class BookForm implements OnInit {
   ratings: number[] = [1, 2, 3, 4, 5];
   currentYear: number = new Date().getFullYear();
 
-    draft: Book = createEmptyBook();
+  draft: Book = createEmptyBook();
+
   ngOnInit(): void {
     const book = this.book();
 

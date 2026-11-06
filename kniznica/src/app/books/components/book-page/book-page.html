@@ -1,0 +1,23 @@
+<h1>Detail knihy</h1>
+
+@if (book(); as book) {
+  <h2>{{ book.title }}</h2>
+
+  <p>
+    <strong>Autor:</strong> {{ book.author }}
+  </p>
+
+  <p>
+    <strong>Stav:</strong>
+    {{ book.available ? 'Dostupná' : 'Požičaná' }}
+  </p>
+
+  <app-book-detail [book]="book" />
+
+} @else {
+  <p>Kniha s číslom {{ id() }} v knižnici neexistuje.</p>
+}
+
+<a matButton routerLink="/books">
+  Späť na zoznam kníh
+</a>
