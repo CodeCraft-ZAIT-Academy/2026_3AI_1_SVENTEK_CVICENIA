@@ -13,11 +13,13 @@ import { Cart } from '../../../cart/components/cart/cart';
 import { Book } from '../../book';
 import { BookService } from '../../book.service';
 import { BookFilterPipe } from '../../book-filter-pipe';
+import { ServerBookList } from '../server-book-list/server-book-list';
 
 @Component({
   selector: 'app-book-list',
   imports: [
     BookCard,
+    ServerBookList,
     Cart,
     BookFilterPipe,
     FormsModule,
