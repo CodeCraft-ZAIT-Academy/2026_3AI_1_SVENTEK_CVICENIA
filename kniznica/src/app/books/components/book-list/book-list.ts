@@ -1,3 +1,4 @@
+
 import { Component, computed, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -6,18 +7,19 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { FormsModule } from '@angular/forms';
-import { ServerBookList } from '../server-book-list/server-book-list';
+
 import { BookCard } from '../book-card/book-card';
 import { Cart } from '../../../cart/components/cart/cart';
 import { Book } from '../../book';
 import { BookService } from '../../book.service';
+import { BookFilterPipe } from '../../book-filter-pipe';
 
 @Component({
   selector: 'app-book-list',
   imports: [
-    ServerBookList,
     BookCard,
     Cart,
+    BookFilterPipe,
     FormsModule,
     MatButtonModule,
     MatIconModule,
@@ -26,37 +28,37 @@ import { BookService } from '../../book.service';
     MatSelectModule,
     MatButtonToggleModule
   ],
+  providers: [BookFilterPipe],
   templateUrl: './book-list.html',
   styleUrl: './book-list.css'
 })
 export class BookList {
 
   private bookService = inject(BookService);
+  private bookFilter = inject(BookFilterPipe);
 
   readonly books = this.bookService.books;
   readonly borrowedBooks = this.bookService.borrowedBooks;
   readonly maxBorrowed = this.bookService.maxBorrowed;
   readonly availableBooks = this.bookService.availableBooks;
+  readonly loading = this.bookService.loading;
+  readonly loadError = this.bookService.loadError;
 
   readonly totalBooks = computed(() => this.books().length);
 
   readonly favoritesOnly = signal(false);
-
   readonly searchText = signal('');
   readonly availability = signal('all');
   readonly sortBy = signal('none');
 
-  readonly visibleBooks = computed(() => {
-    const list = this.bookService.getFilteredBooks(
+  readonly visibleBooks = computed(() =>
+    this.bookFilter.transform(
+      this.bookService.getSortedBooks(this.sortBy()),
       this.searchText(),
       this.availability(),
-      this.sortBy()
-    );
-
-    return this.favoritesOnly()
-      ? list.filter(b => b.favorite)
-      : list;
-  });
+      this.favoritesOnly()
+    )
+  );
 
   readonly currentPage = signal(1);
   readonly pageSize = signal(5);
@@ -88,12 +90,16 @@ export class BookList {
     Array.from({ length: this.pageCount() }, (_, i) => i + 1)
   );
 
-  refreshBooks(): void {
-    this.bookService.getBooks();
-  }
-
   clearSearch(): void {
     this.searchText.set('');
+    this.firstPage();
+  }
+
+  resetFilters(): void {
+    this.searchText.set('');
+    this.availability.set('all');
+    this.sortBy.set('none');
+    this.favoritesOnly.set(false);
     this.firstPage();
   }
 
@@ -137,4 +143,6 @@ export class BookList {
     this.pageSize.set(size);
     this.firstPage();
   }
+
+  
 }

@@ -1,64 +1,50 @@
-import { Injectable, signal, computed } from '@angular/core';
+
+import { computed, inject, Injectable, signal } from '@angular/core';
+import { BookApiService } from './book-api.service';
 import { Book } from './book';
-import { generateBooks } from './book-generator';
 
 @Injectable({
   providedIn: 'root'
 })
 export class BookService {
 
- private readonly myBooks: Book[] = [    {
-      id: 1,
-      title: 'Hobit',
-      author: 'J. R. R. Tolkien',
-      year: 1937,
-      available: true,
-      genre: 'Fantasy',
-      rating: 5,
-      pages: 310,
-      favorite: false
-    },
-    {
-      id: 2,
-      title: '1984',
-      author: 'George Orwell',
-      year: 1949,
-      available: false,
-      genre: 'Dystopia',
-      rating: 4,
-      pages: 328,
-      favorite: false
-    },
-    {
-      id: 3,
-      title: 'Malý princ',
-      author: 'Antoine de Saint-Exupéry',
-      year: 1943,
-      available: true,
-      genre: 'Fiction',
-      rating: 5,
-      pages: 96,
-      favorite: false
-    }
-  ];
+  private readonly bookApi = inject(BookApiService);
 
   readonly maxBorrowed: number = 10;
 
-  private readonly _books = signal<Book[]>(
-    this.limitBorrowed(this.myBooks.concat(generateBooks(40, 4)))
-  );
+  readonly loading = signal(true);
+  readonly loadError = signal('');
+
+  private readonly _books = signal<Book[]>([]);
   readonly books = this._books.asReadonly();
 
-    readonly borrowedBooks = computed(() =>
-      this.books().filter(book => !book.available)
-    );
-    readonly availableBooks = computed(() =>
-      this.books().filter(book => book.available)
-    );
-    readonly favoriteBooks = computed(() =>
-      this.books().filter(book => book.favorite)
-    );
-    
+  readonly borrowedBooks = computed(() =>
+    this.books().filter(book => !book.available)
+  );
+
+  readonly availableBooks = computed(() =>
+    this.books().filter(book => book.available)
+  );
+
+  readonly favoriteBooks = computed(() =>
+    this.books().filter(book => book.favorite)
+  );
+
+  constructor() {
+    this.bookApi.getBooks().subscribe({
+      next: books => {
+        this._books.set(this.limitBorrowed(books));
+        this.loading.set(false);
+      },
+      error: error => {
+        console.error('Načítanie kníh zo servera zlyhalo:', error);
+        this.loadError.set(
+          'Knihy sa nepodarilo načítať. Skontroluj, či JSON Server beží.'
+        );
+        this.loading.set(false);
+      }
+    });
+  }
 
   limitBorrowed(books: Book[]): Book[] {
     let borrowedCount = 0;
@@ -87,7 +73,9 @@ export class BookService {
 
   updateBook(updated: Book): void {
     this._books.update(books =>
-     books.map(book => book.id === updated.id ? updated : book)
+      books.map(book =>
+        book.id === updated.id ? updated : book
+      )
     );
   }
 
@@ -95,102 +83,99 @@ export class BookService {
     this._books.update(books =>
       books.filter(book => book.id !== id)
     );
-}
+  }
 
-  
   borrowBook(id: number): boolean {
     if (!this.canBorrowBook(id)) return false;
+
     this._books.update(books =>
-      books.map(book => book.id === id
-        ? { ...book, available: false } : book)
+      books.map(book =>
+        book.id === id
+          ? { ...book, available: false }
+          : book
+      )
     );
+
     return true;
   }
 
   returnBook(id: number): void {
     this._books.update(books =>
-      books.map(book => book.id === id
-        ? { ...book, available: true } : book)
+      books.map(book =>
+        book.id === id
+          ? { ...book, available: true }
+          : book
+      )
     );
   }
 
   toggleFavorite(id: number): void {
     this._books.update(books =>
-      books.map(book => book.id === id
-        ? { ...book, favorite: !book.favorite } : book)
+      books.map(book =>
+        book.id === id
+          ? { ...book, favorite: !book.favorite }
+          : book
+      )
     );
   }
-  
-  
-getFilteredBooks(
-  searchText: string,
-  availability: string,
-  sortBy: string
-): Book[] {
-  const text = searchText.trim().toLowerCase();
 
-  let result = this.books().filter(book =>
-    book.title.toLowerCase().includes(text) ||
-    book.author.toLowerCase().includes(text)
-  );
+  getSortedBooks(sortBy: string): Book[] {
+    const result = [...this.books()];
 
-  if (availability === 'available') {
-    result = result.filter(book => book.available);
-  } else if (availability === 'borrowed') {
-    result = result.filter(book => !book.available);
+    switch (sortBy) {
+      case 'title':
+        return result.sort((a, b) =>
+          a.title.localeCompare(b.title)
+        );
+
+      case 'year':
+        return result.sort((a, b) =>
+          b.year - a.year
+        );
+
+      case 'rating':
+        return result.sort((a, b) =>
+          b.rating - a.rating
+        );
+
+      default:
+        return result;
+    }
   }
 
-  switch (sortBy) {
-    case 'title':
-      result = [...result].sort((a, b) =>
-        a.title.localeCompare(b.title)
-      );
-      break;
-    case 'year':
-      result = [...result].sort((a, b) => b.year - a.year);
-      break;
-    case 'rating':
-      result = [...result].sort((a, b) => b.rating - a.rating);
-      break;
+  getBooks(): Book[] {
+    return [...this.books()];
   }
 
-  return result;
-}
+  getBookById(id: number): Book | undefined {
+    return this.books().find(book => book.id === id);
+  }
 
-    getBooks(): Book[] {
-      return [...this.books()];
-    }
+  getTotalBooksCount(): number {
+    return this.books().length;
+  }
 
-    getBookById(id: number): Book | undefined {
-      return this.books().find(book => book.id === id);
-    }
+  getBorrowedBooksCount(): number {
+    return this.borrowedBooks().length;
+  }
 
-    getTotalBooksCount(): number {
-        return this.books().length;
-    }
+  canBorrowBook(id: number): boolean {
+    const book = this.getBookById(id);
 
-    getBorrowedBooksCount(): number {
-        return this.borrowedBooks().length;
-    }
+    return !!book &&
+      book.available &&
+      this.borrowedBooks().length < this.maxBorrowed;
+  }
 
-    canBorrowBook(id: number): boolean {
-        const book = this.getBookById(id);
+  countAvailableBooks(): number {
+    return this.books().filter(book => book.available).length;
+  }
 
-        return !!book &&
-        book.available &&
-        this.borrowedBooks().length < this.maxBorrowed;
-    }
+  countFavoriteBooks(): number {
+    return this.books().filter(book => book.favorite).length;
+  }
 
-    countAvailableBooks(): number {
-        return this.books().filter(book => book.available).length;
-    }
-
-    countFavoriteBooks(): number {
-        return this.books().filter(book => book.favorite).length;
-    }
-
-    countAllBooks(): number {
-        return this.books().length;
-    }
-    
+  countAllBooks(): number {
+    return this.books().length;
+  }
 }

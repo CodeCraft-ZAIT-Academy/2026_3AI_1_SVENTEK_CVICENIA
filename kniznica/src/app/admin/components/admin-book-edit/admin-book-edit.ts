@@ -12,11 +12,16 @@ import { Book } from '../../../books/book';
 })
 export class AdminBookEdit {
   private bookService = inject(BookService);
+
+  readonly loading = this.bookService.loading;
+  readonly loadError = this.bookService.loadError;
+
   private router = inject(Router);
 
   id = input<string>();
 
   readonly isEditMode = computed(() => this.id() !== undefined);
+
   readonly book = computed(() => {
     const currentId = this.id();
     return currentId ? this.bookService.getBookById(Number(currentId)) : undefined;

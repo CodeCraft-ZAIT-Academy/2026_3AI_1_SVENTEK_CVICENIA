@@ -1,16 +1,26 @@
 <app-server-book-list>
 
-<section>
+</app-server-book-list>
 
+<section>
   <h2>Zoznam kníh</h2>
+
+  <p class="stats">
+    Všetkých kníh: {{ totalBooks() }}
+    · Dostupných: {{ (books() | bookFilter: '' : 'available').length }}
+    · Obľúbených: {{ (books() | bookFilter: '' : 'all' : true).length }}
+  </p>
 
   <div class="toolbar">
     <mat-form-field class="search">
       <mat-label>Hľadať podľa názvu alebo autora</mat-label>
       <mat-icon matPrefix>search</mat-icon>
-      <input matInput name="search"
+      <input
+        matInput
+        name="search"
         [ngModel]="searchText()"
-        (ngModelChange)="searchText.set($event); firstPage()" />
+        (ngModelChange)="searchText.set($event); firstPage()"
+      />
 
       @if (searchText()) {
         <button matIconButton matSuffix (click)="clearSearch()">
@@ -19,9 +29,11 @@
       }
     </mat-form-field>
 
-    <mat-button-toggle-group name="availability"
+    <mat-button-toggle-group
+      name="availability"
       [ngModel]="availability()"
-      (ngModelChange)="availability.set($event); firstPage()">
+      (ngModelChange)="availability.set($event); firstPage()"
+    >
       <mat-button-toggle value="all">Všetky</mat-button-toggle>
       <mat-button-toggle value="available">Dostupné</mat-button-toggle>
       <mat-button-toggle value="borrowed">Vypožičané</mat-button-toggle>
@@ -29,9 +41,11 @@
 
     <mat-form-field>
       <mat-label>Zoradiť podľa</mat-label>
-    <mat-select name="sortBy"
-      [ngModel]="sortBy()"
-      (ngModelChange)="sortBy.set($event); firstPage()">
+      <mat-select
+        name="sortBy"
+        [ngModel]="sortBy()"
+        (ngModelChange)="sortBy.set($event); firstPage()"
+      >
         <mat-option value="none">Bez zoradenia</mat-option>
         <mat-option value="title">Názvu (A – Z)</mat-option>
         <mat-option value="year">Roku (najnovšie)</mat-option>
@@ -41,54 +55,86 @@
   </div>
 
   @if (visibleBooks().length > 0) {
-    <p>Zobrazené knihy {{ firstShown() }} – {{ lastShown() }} z {{ visibleBooks().length }}</p>
+    <p>
+      Zobrazené knihy {{ firstShown() }} – {{ lastShown() }}
+      z {{ visibleBooks().length }}
+    </p>
   }
 
   <div class="page-size">
     <span>Kníh na stranu:</span>
+
     @for (size of pageSizes; track size) {
-      <button matButton [class.active]="size === pageSize()" (click)="setPageSize(size)">
+      <button
+        matButton
+        [class.active]="size === pageSize()"
+        (click)="setPageSize(size)"
+      >
         {{ size }}
       </button>
     }
   </div>
 
-  @for (book of books(); track book.id;) {  // Iterate over the books array and track by book.id
-      <app-book-card
-        [book]="book"
-        (borrowed)="borrow(book)"
-        (returned)="giveBack(book)">
-      </app-book-card>
-    }
-    @empty {
-    @if (books().length === 0) {
+  @for (book of pagedBooks(); track book.id) {
+    <app-book-card
+      [book]="book"
+      (borrowed)="borrow(book)"
+      (returned)="giveBack(book)"
+    >
+    </app-book-card>
+  } @empty {
+    @if (loading()) {
+      <p>Načítavam knihy...</p>
+    } @else if (loadError()) {
+      <p class="empty">{{ loadError() }}</p>
+    } @else if (books().length === 0) {
       <p class="empty">V knižnici zatiaľ nie sú žiadne knihy.</p>
-    }@else {
-      <p class="empty">Nenašli sa žiadne knihy. Skús zmeniť hľadanie alebo filter.</p>
+    } @else {
+      <p class="empty">
+        Nenašli sa žiadne knihy. Skús zmeniť hľadanie alebo filter.
+      </p>
     }
   }
-  
+
   <div class="pagination">
-    <button matIconButton (click)="firstPage()" [disabled]="currentPage() === 1">
+    <button
+      matIconButton
+      (click)="firstPage()"
+      [disabled]="currentPage() === 1"
+    >
       <mat-icon>first_page</mat-icon>
     </button>
 
-    <button matIconButton (click)="previousPage()" [disabled]="currentPage() === 1">
+    <button
+      matIconButton
+      (click)="previousPage()"
+      [disabled]="currentPage() === 1"
+    >
       <mat-icon>chevron_left</mat-icon>
     </button>
 
-     <button (click)="favoritesOnly.update(v => !v)">
-      {{ favoritesOnly() ? 'Všetky' : 'Iba obľúbené' }} 
-     </button>
+    <button (click)="favoritesOnly.update(v => !v); firstPage()">
+      {{ favoritesOnly() ? 'Všetky' : 'Iba obľúbené' }}
+    </button>
 
-
-    <button matIconButton (click)="nextPage()" [disabled]="currentPage() === pageCount()">
+    <button
+      matIconButton
+      (click)="nextPage()"
+      [disabled]="currentPage() === pageCount()"
+    >
       <mat-icon>chevron_right</mat-icon>
     </button>
 
-    <button matIconButton (click)="lastPage()" [disabled]="currentPage() === pageCount()">
+    <button
+      matIconButton
+      (click)="lastPage()"
+      [disabled]="currentPage() === pageCount()"
+    >
       <mat-icon>last_page</mat-icon>
+    </button>
+
+    <button mat-button (click)="resetFilters()">
+      Vymazať filtre
     </button>
   </div>
 </section>
-<app-server-book-list />

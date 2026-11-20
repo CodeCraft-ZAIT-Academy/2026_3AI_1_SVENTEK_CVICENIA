@@ -1,3 +1,4 @@
+
 import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
@@ -21,6 +22,8 @@ export class AdminBooks {
   private bookService = inject(BookService);
 
   readonly books = this.bookService.books;
+  readonly loading = this.bookService.loading;
+  readonly loadError = this.bookService.loadError;
 
   readonly confirmingDeleteId = signal<number | undefined>(undefined);
 
